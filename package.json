@@ -1,0 +1,32 @@
+{
+  "name": "@precepts/standards",
+  "version": "0.1.0",
+  "description": "Multi-discipline standards for software teams - machine-readable, AI-native, human-friendly",
+  "license": "CC-BY-SA-4.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dishantkamble/precepts-standards.git"
+  },
+  "homepage": "https://precepts.dev",
+  "keywords": [
+    "standards",
+    "integration",
+    "product-management",
+    "ux",
+    "project-management",
+    "ai-native",
+    "mcp",
+    "llm"
+  ],
+  "files": [
+    "standards/",
+    "schema/",
+    "LICENSE"
+  ],
+  "main": "standards/",
+  "exports": {
+    "./standards": "./standards/",
+    "./schema": "./schema/",
+    "./schema/standards.schema.json": "./schema/standards.schema.json"
+  }
+}

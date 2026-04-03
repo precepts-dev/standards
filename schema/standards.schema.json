@@ -1,0 +1,154 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Precepts Standard Metadata",
+    "description": "Schema for validating frontmatter in Precepts standards, guidelines, and governance documents.",
+    "type": "object",
+    "required": [
+        "identifier",
+        "name",
+        "version",
+        "status",
+        "domain",
+        "documentType"
+    ],
+    "properties": {
+        "identifier": {
+            "type": "string",
+            "pattern": "^(INTG|PRD|PRJ|UX|SEC)-(STD|GDL|GOV|BP)-\\d{3}$",
+            "description": "Unique document identifier: <PREFIX>-<TYPE>-<NNN>"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Human-readable document title"
+        },
+        "version": {
+            "type": "string",
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+            "description": "Semantic version (major.minor.patch)"
+        },
+        "status": {
+            "type": "string",
+            "enum": ["DRAFT", "MANDATORY", "RECOMMENDED", "DEPRECATED"],
+            "description": "Lifecycle status of the document"
+        },
+        "domain": {
+            "type": "string",
+            "enum": ["INTEGRATION", "PRODUCT-MANAGEMENT", "PROJECT-MANAGEMENT", "UX", "SECURITY"],
+            "description": "Discipline this document belongs to"
+        },
+        "documentType": {
+            "type": "string",
+            "enum": ["standard", "guideline", "governance", "best-practice"],
+            "description": "Type of document - controls which body sections are required"
+        },
+        "category": {
+            "type": "string",
+            "description": "Primary category (e.g., format, process, accessibility, governance)"
+        },
+        "appliesTo": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Domain-scoped applicability targets (e.g., api, ceremony, web)"
+        },
+        "lastUpdated": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "description": "Last modification date (YYYY-MM-DD)"
+        },
+        "owner": {
+            "type": "string",
+            "description": "Governing body or team responsible for this document"
+        },
+        "standardsCompliance": {
+            "type": "object",
+            "properties": {
+                "iso": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "rfc": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "w3c": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                },
+                "other": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                }
+            },
+            "additionalProperties": false
+        },
+        "taxonomy": {
+            "type": "object",
+            "required": ["capability", "layer"],
+            "properties": {
+                "capability": {
+                    "type": "string",
+                    "description": "Primary capability area (e.g., data-format, authentication, estimation)"
+                },
+                "subCapability": {
+                    "type": "string",
+                    "description": "Sub-capability (e.g., date-time, oauth2, story-points)"
+                },
+                "layer": {
+                    "type": "string",
+                    "description": "Domain-scoped layer (e.g., contract, process, visual, governance)"
+                }
+            },
+            "additionalProperties": false
+        },
+        "enforcement": {
+            "type": "object",
+            "properties": {
+                "method": {
+                    "type": "string",
+                    "enum": ["automated", "review-based", "stage-gate", "hybrid"],
+                    "description": "How compliance is verified"
+                },
+                "validationRules": {
+                    "type": "object",
+                    "description": "Machine-checkable validation rules (primarily for automated enforcement)"
+                },
+                "rejectionCriteria": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Conditions that cause rejection"
+                },
+                "supportedFormats": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Accepted format identifiers"
+                },
+                "authoritativeModel": {
+                    "type": "string",
+                    "description": "Canonical model or source of truth"
+                },
+                "reviewChecklist": {
+                    "type": "array",
+                    "items": { "type": "string" },
+                    "description": "Human-review checklist items (primarily for review-based enforcement)"
+                }
+            },
+            "additionalProperties": true
+        },
+        "dependsOn": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Identifiers of standards this document depends on"
+        },
+        "supersedes": {
+            "type": "string",
+            "description": "Identifier of the document this one replaces"
+        },
+        "classifications": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Sub-classifications within the standard (e.g., ABSOLUTE, SCHEDULED)"
+        }
+    },
+    "additionalProperties": true
+}
