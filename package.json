@@ -28,5 +28,13 @@
     "./standards": "./standards/",
     "./schema": "./schema/",
     "./schema/standards.schema.json": "./schema/standards.schema.json"
+  },
+  "scripts": {
+    "validate": "npx tsx tools/validate.ts --docs-root ./standards",
+    "validate:strict": "npx tsx tools/validate.ts --docs-root ./standards --strict"
+  },
+  "devDependencies": {
+    "gray-matter": "^4.0.3",
+    "tsx": "^4.19.0"
   }
 }
