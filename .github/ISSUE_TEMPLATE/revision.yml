@@ -1,0 +1,41 @@
+name: Standard Revision
+description: Propose a change to an existing standard
+title: "[Revision] "
+labels: ["revision"]
+body:
+  - type: input
+    id: identifier
+    attributes:
+      label: Standard Identifier
+      description: The identifier of the standard to revise
+      placeholder: "INTG-STD-008"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change-type
+    attributes:
+      label: Change Type
+      description: "Patch = typo/formatting, Minor = new rules/status change, Major = breaking change"
+      options:
+        - Patch (typo, formatting, link fix)
+        - Minor (new rule, status change, clarification)
+        - Major (breaking change, rule removal, restructure)
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What should change?
+      description: Describe the specific change and why it's needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence or Rationale
+      description: Why is this revision needed? Link to incidents, specs, or discussions
+    validations:
+      required: false

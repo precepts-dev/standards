@@ -1,0 +1,92 @@
+name: New Standard Proposal
+description: Propose a new standard or guideline for the Precepts platform
+title: "[Proposal] "
+labels: ["proposal"]
+body:
+  - type: input
+    id: identifier
+    attributes:
+      label: Proposed Identifier
+      description: "Follow the pattern: [INTG|PRD|PRJ|UX|SEC]-[STD|GDL|GOV|BP]-NNN"
+      placeholder: "INTG-STD-040"
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: Standard Name
+      placeholder: "API Rate Limiting"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      options:
+        - Integration
+        - Product Management
+        - UX
+        - Project Management
+        - Security
+        - Other (describe below)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Document Type
+      options:
+        - Standard (mandatory, enforceable)
+        - Guideline (recommended, advisory)
+        - Governance (process, decision-making)
+        - Best Practice (proven patterns)
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What gap does this standard fill? What goes wrong without it?
+      placeholder: "Teams currently have no consistent approach to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is and isn't covered by this standard?
+      placeholder: |
+        In scope:
+        - ...
+
+        Out of scope:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: prior-art
+    attributes:
+      label: Prior Art
+      description: Existing specs, RFCs, industry standards, or implementations this builds on
+      placeholder: |
+        - RFC 6585 (429 Too Many Requests)
+        - IETF draft-ietf-httpapi-ratelimit-headers
+    validations:
+      required: true
+
+  - type: textarea
+    id: key-rules
+    attributes:
+      label: Key Rules (Draft)
+      description: What are the 3-5 most important rules this standard would define?
+      placeholder: |
+        1. All APIs MUST return 429 when rate limited
+        2. Responses MUST include Retry-After header
+    validations:
+      required: false
