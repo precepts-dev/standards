@@ -54,3 +54,13 @@ jobs:
       - name: Publish to npm with provenance
         if: steps.version-check.outputs.changed == 'true'
         run: npm publish --access public --provenance
+
+      - name: Notify platform repo
+        if: steps.version-check.outputs.changed == 'true'
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          gh api repos/precepts-dev/platform/dispatches \
+            -f event_type=standards-published \
+            -f "client_payload[version]=$VERSION"
+        env:
+          GH_TOKEN: ${{ secrets.PLATFORM_DISPATCH_PAT }}
