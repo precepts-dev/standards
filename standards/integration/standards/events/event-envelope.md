@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-015"
 name: "Event Envelope Standard"
-version: "1.0.0"
+version: "1.1.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "protocol"
 appliesTo: ["events", "streaming", "webhooks"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -82,12 +82,14 @@ Producers **SHOULD** include the following optional attributes:
 
 ### R-4: Event Type Naming
 
-Event types **MUST** follow INTG-STD-004 (Naming Standard):
+Event `type` values in CloudEvents **MUST** follow a reverse-DNS prefixed naming convention, which extends the base dot-notation pattern of INTG-STD-004 (R-17, R-18):
 
-- **MUST** use reverse-DNS prefix rooted at the organization domain.
-- **MUST** follow the pattern: `{reverse-dns}.{domain}.{entity}.{action}[.{version}]`
+- **MUST** use reverse-DNS prefix rooted at the organization domain (e.g., `com.example`).
+- **MUST** follow the pattern: `{reverse-dns}.{domain}.{entity}.{action}[.{version}]`.
 - **MUST** use lowercase with dots as separators.
 - A version suffix (e.g., `.v2`) **SHOULD** be appended for breaking schema changes.
+
+> **Relationship to INTG-STD-004:** The general dot-notation event naming rules (INTG-STD-004 R-17) define `{domain}.{resource}.{action}` for internal broker topics. CloudEvents `type` values extend this with a mandatory reverse-DNS organizational prefix, making them globally unique for cross-organization event exchange. Topic names (INTG-STD-004 R-20) use the shorter `{domain}.{resource}.{event_type}.v{major}` format without the reverse-DNS prefix, as they are scoped to the organization's broker infrastructure.
 
 ### R-5: Source Attribute Formatting
 
@@ -137,11 +139,11 @@ A single batch **MUST NOT** exceed 1 MiB unless producer and consumer have an ex
 
 | Constraint | Limit | Rationale |
 |-----------|-------|-----------|
-| Single event (envelope + data) | **MUST NOT** exceed 256 KiB | Lowest common denominator across major brokers and webhook receivers |
+| Single event (envelope + data) | **MUST NOT** exceed 256 KiB | Lowest common denominator across major brokers (AWS SQS: 256 KiB, Azure Event Grid: 1 MB per event, Amazon EventBridge: 256 KB, most webhook receivers) |
 | Context attributes only | **SHOULD NOT** exceed 4 KiB | Keep headers lightweight for binary mode |
 | `data` payload | **SHOULD NOT** exceed 252 KiB | Envelope overhead budget |
 
-Events exceeding 256 KiB **MUST** use the claim-check pattern: store the payload externally and include a retrieval URI in the `data` field with `claimCheckUri` and `claimCheckContentType` fields.
+Events exceeding 256 KiB **MUST** use the **claim-check pattern**: instead of embedding the large payload in `data`, the producer stores it externally (e.g., object storage, a pre-signed URL) and includes only a retrieval reference in the event. The `data` field **MUST** then contain `claimCheckUri` (the URL/URI to fetch the full payload) and `claimCheckContentType` (the media type of the stored payload). Consumers retrieve the full payload by fetching from `claimCheckUri`. This pattern avoids broker size limits while preserving the event's routing and metadata characteristics.
 
 ### R-12: HTTP Protocol Binding
 
@@ -149,7 +151,11 @@ HTTP-bound CloudEvents **MUST** comply with the CloudEvents HTTP Protocol Bindin
 
 ### R-13: Kafka Protocol Binding
 
-Kafka-bound CloudEvents **MUST** comply with the CloudEvents Kafka Protocol Binding v1.0.2. The Kafka message key **SHOULD** be set to the `partitionkey` extension value when present, or to the `subject` attribute, to colocate related events. Producers **MUST** set `partitionkey` when causal ordering is required.
+Kafka-bound CloudEvents **MUST** comply with the CloudEvents Kafka Protocol Binding v1.0.2.
+
+- The Kafka message key **SHOULD** be set to the `partitionkey` extension value when present, or to the `subject` attribute when `partitionkey` is absent.
+- Setting the message key colocates causally related events on the same Kafka partition, guaranteeing their delivery order to consumers. Without a consistent key, related events (e.g., all state changes for the same order) can land on different partitions and be processed out of order.
+- Producers **MUST** set `partitionkey` when causal ordering is required (e.g., events for the same entity that must be processed in sequence).
 
 ### R-14: Security - Metadata Hygiene
 
@@ -157,13 +163,14 @@ Event envelope metadata **MUST NOT** leak internal infrastructure details:
 
 - `source` **MUST NOT** contain internal hostnames, private IPs, container/pod identifiers, or internal ports.
 - Extension attributes **MUST NOT** carry credentials, tokens, session identifiers, or PII.
-- `dataschema` **MUST** be reachable only from authorized networks or **MUST** be a logical identifier (URN).
+- `dataschema` **MUST** be reachable only from authorized networks, or **MUST** be a logical identifier (URN) rather than a resolvable URL.
 - Gateways at trust boundaries **SHOULD** validate and sanitize envelope attributes before forwarding externally.
 
 ### R-15: Auditability
 
 - Producers **MUST** set `id` to a value traceable in the producing system's logs.
-- Producers **SHOULD** set `time` for temporal correlation and `traceparent` for distributed trace correlation.
+- Producers **SHOULD** set `time` for temporal correlation.
+- Producers **SHOULD** set `traceparent` for distributed trace correlation.
 - Consumers **MUST** log `id`, `source`, `type`, and `time` upon receipt.
 - The combination of `source` + `id` + `time` **MUST** be sufficient to locate the originating event in producer logs.
 
@@ -268,3 +275,4 @@ Consumers **MUST** reject events missing any required context attribute, log `id
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 1.1.0   | 2026-04-10 | R-4: clarified relationship between CloudEvents type format and INTG-STD-004 R-17/R-18; R-11: documented 256 KiB rationale and claim-check pattern; R-13: explained Kafka partition key ordering rationale; converted multi-statement rules to bullet-point format |

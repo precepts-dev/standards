@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-034"
 name: "Retry Policy"
-version: "1.0.0"
+version: "1.1.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "reliability"
 appliesTo: ["api", "events", "a2a", "mcp", "webhooks", "grpc", "graphql", "batch"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -165,10 +165,10 @@ For async integrations (events, webhooks, queues):
 
 Retry logic **MUST NOT** introduce security vulnerabilities:
 
-1. Retries **MUST** use the original auth context (refresh token if expired, never degrade)
-2. Retry logs **MUST NOT** include request bodies, tokens, or PII
-3. TLS certificate errors **MUST NOT** be retried (potential MITM)
-4. Retry budget (R-7) is mandatory to prevent DDoS amplification
+- Retries **MUST** use the original auth context; if a token has expired, **MUST** refresh it before retrying — **MUST NOT** degrade to a lower-security credential or skip authentication.
+- Retry logs **MUST NOT** include request bodies, tokens, or PII.
+- TLS certificate errors **MUST NOT** be retried. A certificate error indicates a potential MITM (Man-in-the-Middle) attack — an adversary intercepting traffic and presenting a fraudulent certificate. Retrying would re-expose the request to the same compromised connection. The error **MUST** be surfaced immediately for investigation.
+- Retry budget (R-7) is mandatory to prevent DDoS amplification — uncontrolled retries from many clients simultaneously can amplify traffic to a degraded service, preventing its recovery.
 
 ### R-10: Observability
 
@@ -266,3 +266,4 @@ Idempotency-Key: 7c4a8d09-ca95-4c6d-8f3b-91a7e6e0b9d2
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 1.1.0   | 2026-04-10 | R-9: defined MITM and DDoS amplification; converted numbered list to bullet format with inline rationale |

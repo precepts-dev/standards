@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-033"
 name: "Integration Resilience Patterns"
-version: "1.0.0"
+version: "1.1.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "reliability"
 appliesTo: ["api", "events", "a2a", "mcp", "webhooks", "grpc", "graphql", "batch"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -104,6 +104,8 @@ Teams **MAY** override defaults per dependency based on documented SLA character
 
 ### R-2: Bulkhead Isolation
 
+The **bulkhead pattern** isolates resources (thread pools, semaphores, connection pools) into separate compartments per dependency — analogous to the watertight compartments in a ship's hull. When one compartment (dependency) is flooded (overwhelmed or slow), the damage is contained and other compartments (dependencies) continue operating normally. Without bulkheads, a single slow dependency can exhaust the entire thread pool or connection pool, cascading failure to unrelated services.
+
 Every integration point **MUST** be isolated using bulkhead patterns so that resource exhaustion in one dependency does not starve others. Teams **MUST** implement at least one strategy per dependency:
 
 - **Thread pool isolation** - dedicated thread pool per dependency. **SHOULD** be used when the dependency has unpredictable latency or full isolation is required.
@@ -177,7 +179,7 @@ When shedding, the service **MUST**: return HTTP 503 with a `Retry-After` header
 Resilience patterns **MUST** be composed in the following order (outermost to innermost):
 
 ```
-Load Shedder -> Bulkhead -> Circuit Breaker -> Retry(STD-034) -> Timeout(STD-035) -> Call
+Load Shedder -> Bulkhead -> Circuit Breaker -> Retry(INTG-STD-034) -> Timeout(INTG-STD-035) -> Call
 ```
 
 This means:
@@ -209,6 +211,8 @@ If the circuit breaker transitions to OPEN during a retry sequence, remaining re
 ### R-7: Observability
 
 Every service **MUST** expose a resilience dashboard covering: circuit breaker state, bulkhead utilization, fallback activation rate, load shedding rate by tier, and health check status for all dependencies.
+
+> **Scope vs INTG-STD-029:** INTG-STD-029 (Integration Observability) mandates general observability for all integration endpoints: distributed tracing, structured logging, and standard request metrics (latency, error rate, throughput). R-7 here mandates **resilience-specific** metrics that INTG-STD-029 does not cover: circuit breaker state transitions, bulkhead slot utilization, fallback activation counts, and health check probe outcomes. Both standards apply simultaneously — INTG-STD-029 provides the observability foundation; R-7 adds the resilience-pattern layer on top.
 
 **Required metrics** (Prometheus, OpenTelemetry, or equivalent):
 
@@ -289,3 +293,4 @@ If the circuit is OPEN, the request skips retry and timeout, goes directly to th
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 1.1.0   | 2026-04-10 | R-2: added bulkhead pattern explanation; R-6: corrected incomplete standard IDs to INTG-STD-034/035; R-7: clarified scope vs INTG-STD-029 |

@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-035"
 name: "Timeout Standard"
-version: "1.0.0"
+version: "1.1.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "reliability"
 appliesTo: ["api", "events", "a2a", "mcp", "webhooks", "grpc", "graphql", "batch"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -99,7 +99,9 @@ For gRPC, services **MUST NOT** create new contexts that discard the incoming de
 
 ### R-5: Deadline Budget Enforcement
 
-A service **MUST NOT** initiate a downstream call if the remaining deadline budget is less than the minimum time required to complete it. Instead, the service **MUST** return immediately with a timeout error, log the budget exhaustion event, and increment the `timeout.budget_exhausted` metric.
+A service **MUST NOT** initiate a downstream call if the remaining deadline budget is less than the minimum time required to complete it. This rule prevents "wasted work": starting a call that will certainly exceed its deadline consumes downstream resources (threads, connections, compute) without any possibility of the result being used — the upstream caller has already timed out or will before the response arrives. Failing fast with a budget-exhausted error is always preferable to starting a doomed call.
+
+A service **MUST** return immediately with a timeout error, log the budget exhaustion event, and increment the `timeout.budget_exhausted` metric when remaining budget is insufficient.
 
 ```
 function call_downstream(incoming_deadline, safety_margin, downstream_min):
@@ -148,12 +150,12 @@ Timeouts and circuit breakers (INTG-STD-033) **MUST** work together:
 
 Timeouts **MUST** defend against resource exhaustion attacks:
 
-- **Slowloris prevention:** Server read-header timeout **MUST** be 5s or less.
-- **Slow POST prevention:** Server **MUST** enforce a minimum data rate; terminate connections below 500 bytes/second for more than 10 seconds.
-- **Connection pool exhaustion:** Idle connections beyond 120s **SHOULD** be closed.
+- **Slowloris prevention:** Server read-header timeout **MUST** be 5s or less. Slowloris is a denial-of-service attack where an attacker opens many connections and sends HTTP headers very slowly (one byte at a time), keeping connections open indefinitely and exhausting the server's connection pool. A short read-header timeout forcibly closes stalled connections.
+- **Slow POST prevention:** Server **MUST** enforce a minimum data rate; connections transmitting less than 500 bytes/second for more than 10 seconds **MUST** be terminated. Slow POST is the body-phase equivalent of Slowloris — the attacker slowly dribbles POST body bytes to hold connections open. The 500 bytes/second threshold is intentionally strict: legitimate clients on any reasonable network exceed this rate. APIs receiving very small payloads (under 1 KB) effectively get this protection for free from their read timeout. APIs receiving large file uploads **MAY** use a higher byte budget but **MUST** document the exception.
+- **Connection pool exhaustion:** Idle connections beyond 120s **SHOULD** be closed to reclaim pool slots.
 - **Query of death:** Database statement timeouts **MUST** prevent single queries from monopolizing resources.
 
-Services **MUST NOT** extend timeouts under load. Longer timeouts during overload consume more resources and accelerate cascading failures. The correct response is to shed load via circuit breakers or rate limiting.
+Services **MUST NOT** extend timeouts under load. Longer timeouts during overload consume more resources and accelerate cascading failures. The correct response to overload is to shed load via circuit breakers or rate limiting.
 
 ### R-10: Timeout Metrics
 
@@ -267,3 +269,4 @@ function fetch_from_service_a(request, upstream_deadline):
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 1.1.0   | 2026-04-10 | R-5: added justification for deadline budget enforcement; R-9: added explanation of Slowloris attack, Slow POST attack, and justification for the 500 bytes/s threshold |

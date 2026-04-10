@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-006"
 name: "Backward and Forward Compatibility"
-version: "1.0.0"
+version: "2.0.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "versioning"
 appliesTo: ["api", "events", "a2a", "files", "mcp", "webhooks", "grpc", "graphql", "batch", "streaming"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -58,59 +58,59 @@ Integration contracts are long-lived shared agreements. Once a producer publishe
 
 ### R-1: Additive-Only Evolution (Provider Rules)
 
-**R-COMPAT-001:** Providers **MUST** evolve published contracts using additive-only changes as the default policy.
+**R-1-1:** Providers **MUST** evolve published contracts using additive-only changes as the default policy.
 
-**R-COMPAT-002:** Providers **MUST NOT** make any breaking change without following the Breaking Change Process.
+**R-1-2:** Providers **MUST NOT** make any breaking change without following the Breaking Change Process.
 
-**R-COMPAT-003:** Providers **MUST NOT** remove a field from a published response or event payload. Deprecated fields **MUST** continue to be populated until the next major version.
+**R-1-3:** Providers **MUST NOT** remove a field from a published response or event payload. Deprecated fields **MUST** continue to be populated until the next major version.
 
-**R-COMPAT-004:** Providers **MUST NOT** rename a field in a published contract. A rename equals a remove-plus-add - both sides break.
+**R-1-4:** Providers **MUST NOT** rename a field in a published contract. A rename equals a remove-plus-add — both sides break.
 
-**R-COMPAT-005:** Providers **MUST NOT** change the type of an existing field. Type widening is permitted only where the wire format guarantees lossless representation (see Protocol-Specific Rules).
+**R-1-5:** Providers **MUST NOT** change the type of an existing field. Type widening is permitted only where the wire format guarantees lossless representation (see Protocol-Specific Rules).
 
-**R-COMPAT-006:** Providers **MUST NOT** change the semantic meaning of an existing field. Repurposing a field is a breaking change even if the type is unchanged.
+**R-1-6:** Providers **MUST NOT** change the semantic meaning of an existing field. Repurposing a field is a breaking change even if the type is unchanged.
 
-**R-COMPAT-007:** Providers **MUST NOT** make an optional field mandatory in request contracts.
+**R-1-7:** Providers **MUST NOT** make an optional field mandatory in request contracts.
 
-**R-COMPAT-008:** Providers **MUST NOT** make a mandatory field optional in response contracts if consumers depend on its presence.
+**R-1-8:** Providers **MUST NOT** make a mandatory field optional in response contracts if consumers depend on its presence.
 
-**R-COMPAT-009:** New fields added to responses or events **MUST** be optional or **MUST** include a default value.
+**R-1-9:** New fields added to responses or events **MUST** be optional or **MUST** include a default value.
 
-**R-COMPAT-010:** Providers **MUST NOT** tighten validation constraints on existing fields. Loosening constraints is permitted.
+**R-1-10:** Providers **MUST NOT** tighten validation constraints on existing fields. Loosening constraints is permitted.
 
 ### R-2: Consumer Resilience
 
-**R-COMPAT-011:** Consumers **MUST** ignore unknown fields in responses and events. Unknown fields **MUST NOT** cause deserialization failure, validation rejection, or runtime error.
+**R-2-1:** Consumers **MUST** ignore unknown fields in responses and events. Unknown fields **MUST NOT** cause deserialization failure, validation rejection, or runtime error.
 
-**R-COMPAT-012:** Consumers **MUST** tolerate the absence of optional fields. Default/fallback behavior **MUST** be defined for every optional field a consumer depends on.
+**R-2-2:** Consumers **MUST** tolerate the absence of optional fields. Default/fallback behavior **MUST** be defined for every optional field a consumer depends on.
 
-**R-COMPAT-013:** Consumers **MUST** handle unknown enum values gracefully by applying a documented fallback rather than failing.
+**R-2-3:** Consumers **MUST** handle unknown enum values gracefully by applying a documented fallback rather than failing. The recommended fallback is to treat the unknown value as `UNKNOWN` (per INTG-STD-004 R-27). The fallback **MUST** be documented in the consumer's code and specification so all systems consuming the same contract apply a consistent interpretation. This rule ensures forward compatibility — it does **not** mean silently ignoring enum values that drive business logic. Consumers receiving an unknown enum value **MUST** log it and apply a conservative default (e.g., route to manual review rather than auto-processing with an incorrect assumption).
 
-**R-COMPAT-014:** Consumers **MUST** handle unknown HTTP status codes by falling back to the class-level code (e.g., unrecognized `432` treated as `400`).
+**R-2-4:** Consumers **MUST** handle unknown HTTP status codes by falling back to the class-level code (e.g., unrecognized `432` treated as `400`).
 
-**R-COMPAT-015:** Consumers **MUST** follow HTTP redirects (301, 302, 307, 308) rather than failing.
+**R-2-5:** Consumers **MUST** follow HTTP redirects (301, 302, 307, 308) rather than failing.
 
-**R-COMPAT-016:** Consumers **MUST NOT** exploit definition gaps in provider contracts. Providers **MAY** tighten undocumented constraints without a major version bump.
+**R-2-6:** Consumers **MUST NOT** exploit definition gaps in provider contracts. Providers **MAY** tighten undocumented constraints without a major version bump.
 
-**R-COMPAT-017:** Consumers performing PUT/PATCH **SHOULD** preserve unknown fields and send them back unmodified to prevent data loss.
+**R-2-7:** Consumers performing PUT/PATCH **SHOULD** preserve unknown fields and send them back unmodified to prevent data loss.
 
 ### R-3: Security Constraints
 
-**R-COMPAT-018:** Ignoring unknown fields (R-COMPAT-011) **MUST NOT** override security validation. Providers **SHOULD** reject unexpected fields in request bodies (HTTP 400) to prevent mass-assignment attacks.
+**R-3-1:** Ignoring unknown fields (R-2-1) **MUST NOT** override security validation. Providers **SHOULD** reject unexpected fields in request bodies (HTTP 400) to prevent mass-assignment attacks.
 
-**R-COMPAT-019:** Providers **MUST NOT** accept deprecated authentication or encryption parameters with known vulnerabilities solely for backward compatibility. Security breaking changes **MAY** bypass standard deprecation timelines.
+**R-3-2:** Providers **MUST NOT** accept deprecated authentication or encryption parameters with known vulnerabilities solely for backward compatibility. Security breaking changes **MAY** bypass standard deprecation timelines.
 
-**R-COMPAT-020:** All fields - known and unknown - **MUST** be subject to size limits, encoding validation, and injection-prevention controls.
+**R-3-3:** All fields — known and unknown — **MUST** be subject to size limits, encoding validation, and injection-prevention controls.
 
 ### R-4: Enum Evolution
 
-**R-COMPAT-021:** Providers **MUST NOT** remove values from an enum in a response or event payload.
+**R-4-1:** Providers **MUST NOT** remove values from an enum in a response or event payload.
 
-**R-COMPAT-022:** Providers **MAY** add new values to a response/event enum, provided consumers handle unknown values (R-COMPAT-013). Extensible enums **SHOULD** be documented as such.
+**R-4-2:** Providers **MAY** add new values to a response/event enum, provided consumers handle unknown values (R-2-3). Extensible enums **SHOULD** be documented as such.
 
-**R-COMPAT-023:** Providers **MUST NOT** add new values to a request enum if the provider previously validated against a closed set.
+**R-4-3:** Providers **MUST NOT** add new values to a request enum if the provider previously validated against a closed set.
 
-**R-COMPAT-024:** For enums used in both input and output, the safe path is: (1) provider adds the value to processing and response schema, (2) provider documents it, (3) consumers adopt it in requests at their own pace.
+**R-4-4:** For enums used in both input and output, the safe path is: (1) provider adds the value to processing and response schema, (2) provider documents it, (3) consumers adopt it in requests at their own pace.
 
 ### R-5: Type-Specific Compatibility
 
@@ -136,13 +136,13 @@ Integration contracts are long-lived shared agreements. Once a producer publishe
 
 ### R-6: Audit and Traceability
 
-**R-COMPAT-025:** All schema changes **MUST** be version-controlled with full commit history.
+**R-6-1:** All schema changes **MUST** be version-controlled with full commit history.
 
-**R-COMPAT-026:** Each schema version **MUST** be immutable once published to a registry or catalog.
+**R-6-2:** Each schema version **MUST** be immutable once published to a registry or catalog.
 
-**R-COMPAT-027:** Breaking change approvals **MUST** be recorded in the architecture decision log with justification, impact assessment, and migration plan.
+**R-6-3:** Breaking change approvals **MUST** be recorded in the architecture decision log with justification, impact assessment, and migration plan.
 
-**R-COMPAT-028:** Consumer migration progress **MUST** be tracked. Providers **MUST** retain traffic metrics sufficient to identify consumers still using deprecated versions.
+**R-6-4:** Consumer migration progress **MUST** be tracked. Providers **MUST** retain traffic metrics sufficient to identify consumers still using deprecated versions.
 
 ## Examples
 
@@ -228,3 +228,4 @@ When a breaking change is unavoidable, follow these steps:
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 2.0.0   | 2026-04-10 | **Breaking:** Renumbered sub-rules from R-COMPAT-NNN to R-N-M format for consistency with the standard's own rule numbering scheme; updated all internal cross-references; expanded R-2-3 (unknown enum handling) with clarification on documented fallback semantics and the UNKNOWN sentinel |

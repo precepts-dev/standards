@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-029"
 name: "Integration Observability"
-version: "1.0.0"
+version: "1.1.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "observability"
 appliesTo: ["api", "events", "a2a", "files", "mcp", "webhooks", "grpc", "graphql", "batch", "streaming"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -49,6 +49,12 @@ Every integration action - API call, event, file transfer, or agent handshake - 
 
 ### R-1: W3C Trace Context Propagation
 
+**Key W3C Trace Context terms:**
+- **`traceparent`** — carries the trace ID (globally unique ID for the entire request chain), the parent span ID (ID of the immediate upstream operation), and trace flags (sampling state). Format: `{version}-{trace-id}-{parent-id}-{trace-flags}`.
+- **`tracestate`** — carries vendor-specific tracing metadata in key=value pairs, forwarded alongside `traceparent` through the chain.
+- **Trace ID** — 32 hex characters identifying the entire distributed operation across all services.
+- **Span ID** — 16 hex characters identifying a single unit of work within the trace.
+
 All integration endpoints **MUST** propagate the `traceparent` HTTP header per the W3C Trace Context specification:
 
 ```
@@ -56,17 +62,22 @@ traceparent: {version}-{trace-id}-{parent-id}-{trace-flags}
 Example:     00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01
 ```
 
-Services **MUST NOT** generate all-zero `trace-id` or `parent-id` values. If a request arrives without `traceparent`, the receiving service **MUST** generate a new trace context.
-
-Services **SHOULD** propagate the `tracestate` header alongside `traceparent` and **MUST NOT** modify or strip `tracestate` entries they do not own.
-
-For non-HTTP transports, trace context **MUST** be propagated via the protocol's native metadata mechanism (gRPC metadata keys, Kafka message headers, AMQP application properties, batch file manifest metadata).
+- Services **MUST NOT** generate all-zero `trace-id` or `parent-id` values.
+- If a request arrives without `traceparent`, the receiving service **MUST** generate a new trace context.
+- Services **SHOULD** propagate the `tracestate` header alongside `traceparent`.
+- Services **MUST NOT** modify or strip `tracestate` entries they do not own.
+- For non-HTTP transports, trace context **MUST** be propagated via the protocol's native metadata mechanism (gRPC metadata keys, Kafka message headers, AMQP application properties, batch file manifest metadata).
 
 ### R-2: Correlation IDs
 
-All API responses **MUST** include an `X-Request-ID` header containing a UUID v4 or ULID. If the incoming request includes `X-Request-ID`, the service **MUST** echo that value; otherwise it **MUST** generate one.
+All API responses **MUST** include an `X-Request-ID` header containing a UUID v4 or ULID.
 
-The `X-Request-ID` **MUST** be included in all log entries for that request via the `request_id` field. The `X-Request-ID` is distinct from `trace-id` - it is a business-level identifier that **MAY** be shared with API consumers for support purposes.
+> **What is a ULID?** A ULID (Universally Unique Lexicographically Sortable Identifier) is an alternative to UUID v4 that embeds a millisecond timestamp in its first 10 characters, making ULIDs sortable by creation time. Format: 26 uppercase characters from a Crockford Base32 alphabet (e.g., `01HZX3KQVB8E72GQJHF5RM6YWN`). ULIDs are preferable to UUIDs where time-ordered identifiers are useful (e.g., tracing request sequences in logs).
+
+- If the incoming request includes `X-Request-ID`, the service **MUST** echo that value.
+- If the incoming request does not include `X-Request-ID`, the service **MUST** generate one.
+- The `X-Request-ID` **MUST** be included in all log entries for that request via the `request_id` field.
+- The `X-Request-ID` is distinct from `trace-id`: it is a business-level identifier **MAY** be shared with API consumers for support purposes, while `trace-id` is an internal tracing concern that **MAY** be regenerated at trust boundaries.
 
 ### R-3: Structured Logging Format
 
@@ -131,6 +142,8 @@ All custom integration metrics **MUST** follow OpenTelemetry semantic naming con
 | `integration.request.count` | Counter | `{request}` | Total requests |
 | `integration.request.error.count` | Counter | `{request}` | Failed requests |
 | `integration.request.active` | UpDownCounter | `{request}` | In-flight requests |
+
+> **Unit notation:** `{request}` and `{event}` use OpenTelemetry's curly-brace notation for dimensionless counts of domain-specific items. This follows the OpenTelemetry Semantic Conventions which distinguish between raw numbers and counts of specific things. `{request}` means "count of requests" (not a raw dimensionless number), which enables instrumentation tools to display units meaningfully (e.g., "142 requests" rather than "142").
 
 **Additional metrics for event-driven integrations:**
 
@@ -224,3 +237,4 @@ X-Request-ID: f47ac10b-58cc-4372-a567-0e02b2c3d479
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 1.1.0   | 2026-04-10 | R-1: added W3C Trace Context term definitions; R-2: defined ULID and converted to bullet format; R-6: added explanation of OTel curly-brace unit notation |

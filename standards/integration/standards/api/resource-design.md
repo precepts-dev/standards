@@ -1,7 +1,7 @@
 ---
 identifier: "INTG-STD-008"
 name: "API Resource Design and Naming"
-version: "1.0.0"
+version: "1.1.0"
 status: "MANDATORY"
 
 domain: "INTEGRATION"
@@ -9,7 +9,7 @@ documentType: "standard"
 category: "protocol"
 appliesTo: ["api"]
 
-lastUpdated: "2026-03-28"
+lastUpdated: "2026-04-10"
 owner: "Integration Architecture Board"
 
 standardsCompliance:
@@ -59,10 +59,10 @@ Every API URL **MUST** follow this pattern:
 - The version prefix **MUST** be `v` + major version number as the first path segment.
 - Path segments after the version **MUST** alternate between collection names and resource identifiers.
 - Collection path segments **MUST** use plural nouns in kebab-case. They **MUST NOT** contain verbs.
-- Resource identifier path parameter names **MUST** use snake_case (e.g., `{order_id}`).
+- Resource identifier path parameter names **MUST** use `snake_case` (e.g., `{order_id}` not `{orderId}`). snake_case is required for consistency with JSON field naming (INTG-STD-004 R-5) — parameters are mapped directly to field names in most frameworks, so diverging conventions require unnecessary translation logic.
 - Identifier values **SHOULD** use a type prefix with an opaque string (e.g., `ord_82f3k`).
 - Identifier values **MUST** be URL-safe and **MUST NOT** expose sequential integers as the sole identifier.
-- URL paths **SHOULD NOT** exceed three levels of resource nesting.
+- URL paths **SHOULD NOT** exceed three levels of resource nesting. Example: `/v1/orders/{order_id}/items/{item_id}/attachments` is three levels and is the recommended maximum. Deeper relationships should be accessed via query parameters (e.g., `/v1/attachments?item_id={item_id}`).
 - URLs **MUST NOT** contain trailing slashes or empty path segments.
 - All API paths **MUST** match: `^/v[0-9]+/[a-z][a-z0-9-]*(/{[a-z_]+}(/[a-z][a-z0-9-]*)*)*$`
 
@@ -98,12 +98,19 @@ APIs **MUST** use HTTP methods per RFC 9110.
 
 *PATCH **SHOULD** be designed to be idempotent where possible.
 
-- `GET` **MUST** be safe and **MUST NOT** accept a request body. Responses **MUST** be cacheable unless marked otherwise.
-- `POST` to a collection **MUST** return `201 Created` with a `Location` header. POST **SHOULD** accept an `Idempotency-Key` header for safe retries.
-- `PUT` **MUST** replace the entire resource and **MUST** be idempotent. Omitted fields **MUST** reset to defaults.
-- `PATCH` **MUST** use JSON Merge Patch (RFC 7396). Only fields present **MUST** be updated; absent fields **MUST** remain unchanged. To null a field, send JSON `null`.
-- `DELETE` **MUST** be idempotent and **MUST NOT** accept a request body. Return `204 No Content` or `200 OK`.
-- `GET` and `DELETE` **MUST NOT** accept a request body. `POST` **MUST NOT** be used for retrieval. `PUT` **MUST NOT** be used for partial updates.
+- `GET` **MUST** be safe (read-only and without side effects per RFC 9110).
+- `GET` **MUST NOT** accept a request body.
+- `GET` responses **MUST** be cacheable unless explicitly marked otherwise (e.g., `Cache-Control: no-store`).
+- `POST` to a collection **MUST** return `201 Created` with a `Location` header pointing to the created resource.
+- `POST` **SHOULD** accept an `Idempotency-Key` header for safe retries.
+- `POST` **MUST NOT** be used for retrieval. `GET` is semantically correct for safe, cacheable reads. If query complexity requires a body (e.g., complex multi-field filters), prefer GraphQL (see INTG-GOV-001) rather than overloading `POST` semantics on a REST endpoint.
+- `PUT` **MUST** replace the entire resource state and **MUST** be idempotent. Omitted fields **MUST** reset to documented defaults.
+- `PATCH` **MUST** use JSON Merge Patch (RFC 7396).
+- `PATCH`: only fields present in the patch body **MUST** be updated; absent fields **MUST** remain unchanged.
+- To null a field via `PATCH`, send JSON `null` for that field.
+- `DELETE` **MUST** be idempotent.
+- `DELETE` **MUST NOT** accept a request body. Return `204 No Content` or `200 OK`.
+- `PUT` **MUST NOT** be used for partial updates.
 
 ### R-3: Collection Response Envelope
 
@@ -149,7 +156,7 @@ All collection endpoints **MUST** support pagination. Cursor-based pagination **
 | `has_more` | boolean | `true` if additional items exist beyond this page |
 | `next_cursor` | string or null | Opaque cursor for next page. `null` when `has_more` is `false`. |
 
-Collection endpoints **SHOULD NOT** return `total_count` by default. If required, it **MAY** be opt-in via `?include_total=true`.
+Collection endpoints **SHOULD NOT** return `total_count` by default. `COUNT(*)` with complex filter predicates on large tables can be significantly more expensive than the data query itself. Making it opt-in via `?include_total=true` ensures only consumers that genuinely need the total incur the cost. If required, it **MAY** be opt-in via `?include_total=true`.
 
 ### R-5: Filtering and Sorting
 
@@ -190,10 +197,11 @@ Operations that cannot complete synchronously **MUST** return `202 Accepted` wit
 ### R-10: Security
 
 - Resource identifiers **MUST NOT** be sequential integers. Use opaque, high-entropy identifiers.
-- Authorization checks **MUST** occur on every request. Sub-resource access **MUST** validate the parent chain.
-- Error responses **MUST NOT** distinguish between "does not exist" and "no access" - return `404` (or `403` consistently) for both.
-- Collection endpoints **MUST** apply authorization filters before pagination.
-- URLs **MUST NOT** contain PII or sensitive data.
+- Authorization checks **MUST** occur on every request.
+- Sub-resource access **MUST** validate the entire parent chain (not just the sub-resource itself).
+- Error responses **MUST NOT** distinguish between "does not exist" and "no access" — return `404` (or `403` consistently) for both to prevent resource enumeration.
+- Collection endpoints **MUST** apply authorization filters before pagination is applied.
+- URLs **MUST NOT** contain PII or sensitive data (names, email addresses, government IDs).
 
 ### R-11: Content Types
 
@@ -269,7 +277,15 @@ Enforcement **MUST** occur at two stages: design time (OpenAPI linting) and runt
 
 **Opaque identifiers** - Sequential integers are trivially enumerable and enable BOLA attacks. Prefixed opaque IDs provide type safety and security.
 
-**Kebab-case URLs, snake_case parameters** - Kebab-case is readable in logs and browsers. Snake_case in parameters aligns with JSON field naming per INTG-STD-004.
+**Kebab-case URLs, snake_case parameters** - Kebab-case is readable in logs and browsers. Snake_case in parameters aligns with JSON field naming per INTG-STD-004, eliminating the need for case transformation code in handlers and clients.
+
+**Three-level nesting limit** - Deeper paths become hard to document, test, and authorize. `GET /v1/orders/{id}/items/{id}/attachments/{id}/tags/{id}` requires four nested authorization checks before serving data. Flat resources with filter parameters (`/v1/tags?attachment_id=...`) are independently addressable, independently securable, and independently cacheable.
+
+**POST not for retrieval** - `POST` is neither safe nor cacheable per RFC 9110, which means gateways, proxies, and clients cannot cache responses. Using `GET` for retrieval enables HTTP caching infrastructure to reduce backend load. If filter complexity cannot be expressed in query parameters, `GraphQL` (per INTG-GOV-001) is the appropriate protocol choice.
+
+**Cursor-based pagination** - Offset pagination breaks under concurrent writes (items shift between pages). Cursor pagination provides stable traversal at any scale.
+
+**Opaque identifiers** - Sequential integers are trivially enumerable and enable BOLA attacks. Prefixed opaque IDs provide type safety and security.
 
 **Collection envelope** - `{"data": [], "pagination": {}}` ensures pagination metadata can be added without breaking changes.
 
@@ -284,3 +300,4 @@ Enforcement **MUST** occur at two stages: design time (OpenAPI linting) and runt
 | Version | Date       | Change             |
 | ------- | ---------- | ------------------ |
 | 1.0.0   | 2026-03-28 | Initial definition |
+| 1.1.0   | 2026-04-10 | Converted R-2/R-10 to bullet-point format; added rationale for snake_case path params, 3-level nesting, POST retrieval prohibition, and total_count opt-in |
