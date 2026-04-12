@@ -14,7 +14,8 @@ jobs:
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 22
+          node-version: 22  # LTS — sufficient for schema validation
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -22,45 +23,42 @@ jobs:
       - name: Run validator (strict)
         run: npm run validate:strict
 
-  publish:
-    name: Publish to npm
+  release:
+    name: Semantic release
     runs-on: ubuntu-latest
     needs: validate
     permissions:
-      contents: read
-      id-token: write
+      contents: write        # push release commit + tag
+      issues: write          # comment on resolved issues
+      pull-requests: write   # comment on merged PRs
+      id-token: write        # OIDC Trusted Publishing (npm provenance)
 
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: precepts-dev
+          repositories: "standards,platform"
+
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: 24  # Node 24 required for npm OIDC Trusted Publishing
           registry-url: https://registry.npmjs.org
+          cache: 'npm'
 
-      - name: Check if version changed
-        id: version-check
-        run: |
-          CURRENT=$(node -p "require('./package.json').version")
-          PUBLISHED=$(npm view @precepts/standards version 2>/dev/null || echo "0.0.0")
-          if [ "$CURRENT" != "$PUBLISHED" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Version changed: $PUBLISHED -> $CURRENT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Version unchanged: $CURRENT (skipping publish)"
-          fi
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Publish to npm with provenance
-        if: steps.version-check.outputs.changed == 'true'
-        run: npm publish --access public --provenance
-
-      - name: Notify platform repo
-        if: steps.version-check.outputs.changed == 'true'
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          gh api repos/precepts-dev/platform/dispatches \
-            -f event_type=standards-published \
-            -f "client_payload[version]=$VERSION"
+      - name: Run semantic release
+        run: npx semantic-release
         env:
-          GH_TOKEN: ${{ secrets.PLATFORM_DISPATCH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub API (releases, PR comments)
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}  # git push + platform dispatch
+          NPM_CONFIG_PROVENANCE: "true"
