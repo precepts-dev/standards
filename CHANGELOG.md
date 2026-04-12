@@ -1,3 +1,9 @@
+## [0.2.1](https://github.com/precepts-dev/standards/compare/v0.2.0...v0.2.1) (2026-04-12)
+
+### Bug Fixes
+
+* **intg-gov-001:** Update version history description from 'Initial s… ([#3](https://github.com/precepts-dev/standards/issues/3)) ([9e418f4](https://github.com/precepts-dev/standards/commit/9e418f4d805558cbbbdae08fe03b3368ab521bdc))
+
 ## [0.2.0](https://github.com/precepts-dev/standards/compare/v0.1.4...v0.2.0) (2026-04-12)
 
 ### Features
