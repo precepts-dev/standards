@@ -1,0 +1,41 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-title:
+    name: Validate conventional commit format
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Allowed commit types — must stay in sync with .releaserc.json releaseRules
+          # and the commit convention documented in CONTRIBUTING.md
+          types: |
+            feat
+            fix
+            refactor
+            perf
+            revert
+            docs
+            chore
+            ci
+            build
+            test
+          # Scope is optional — validated only when present
+          requireScope: false
+          # Subject must not be empty
+          subjectPattern: ^.{1,72}$
+          subjectPatternError: |
+            PR title subject must be non-empty and at most 72 characters.
+
+            Examples of valid PR titles:
+              feat(intg): add INTG-STD-016 API security standard
+              fix(INTG-STD-004): correct approved-abbreviations table header
+              chore(ci): replace publish workflow with semantic-release
+              feat(intg)!: remove INTG-STD-007  ← triggers MAJOR version bump
