@@ -1,3 +1,9 @@
+## [0.1.4](https://github.com/precepts-dev/standards/compare/v0.1.3...v0.1.4) (2026-04-12)
+
+### Bug Fixes
+
+* **ci:** add semantic-release, GitHub App token, and dev workflow ([#1](https://github.com/precepts-dev/standards/issues/1)) ([0d8edd3](https://github.com/precepts-dev/standards/commit/0d8edd3a86db83c67a675a90938b26ea4bb508cc))
+
 # Changelog
 
 All notable changes to `@precepts/standards` are documented here.
