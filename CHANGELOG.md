@@ -1,3 +1,9 @@
+## [0.2.4](https://github.com/precepts-dev/standards/compare/v0.2.3...v0.2.4) (2026-04-13)
+
+### Bug Fixes
+
+* **INTG-STD-003:** correct broken relative link to naming-conventions ([#6](https://github.com/precepts-dev/standards/issues/6)) ([b007272](https://github.com/precepts-dev/standards/commit/b007272b2d6f9814a969803c18317db6bc4ca5f4))
+
 ## [0.2.3](https://github.com/precepts-dev/standards/compare/v0.2.2...v0.2.3) (2026-04-13)
 
 ### Bug Fixes
