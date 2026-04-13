@@ -1,3 +1,9 @@
+## [0.2.3](https://github.com/precepts-dev/standards/compare/v0.2.2...v0.2.3) (2026-04-13)
+
+### Bug Fixes
+
+* **INTG-GOV-001:** Dummy trigger for standards update on platform ([#5](https://github.com/precepts-dev/standards/issues/5)) ([1224b20](https://github.com/precepts-dev/standards/commit/1224b2051e18da5b5076080001272e93edaa01c0))
+
 ## [0.2.2](https://github.com/precepts-dev/standards/compare/v0.2.1...v0.2.2) (2026-04-13)
 
 ### Bug Fixes
