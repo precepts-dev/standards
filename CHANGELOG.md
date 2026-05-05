@@ -1,3 +1,9 @@
+## [0.3.0](https://github.com/precepts-dev/standards/compare/v0.2.4...v0.3.0) (2026-05-05)
+
+### Features
+
+* **sec:** add complete security domain standards (18 documents) ([#10](https://github.com/precepts-dev/standards/issues/10)) ([ac6411f](https://github.com/precepts-dev/standards/commit/ac6411f767a1b56618c7576e75bcd0de6ee80fb2))
+
 ## [0.2.4](https://github.com/precepts-dev/standards/compare/v0.2.3...v0.2.4) (2026-04-13)
 
 ### Bug Fixes
