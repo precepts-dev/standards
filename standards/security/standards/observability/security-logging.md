@@ -175,7 +175,7 @@ Systems **MUST** configure real-time alerts for the following conditions:
 | Authentication failure rate exceeds 10× baseline | 5 minutes | High |
 | Authorization failure rate exceeds 5× baseline | 5 minutes | High |
 | Successful authentication from a new country/region for a privileged account | 15 minutes | Warning |
-| Bulk data export (>1000 records in <1 minute) | 5 minutes | High |
+| Bulk data export (> 1000 records in < 1 minute) | 5 minutes | High |
 | Administrative privilege grant | 15 minutes | Warning |
 | Security configuration change | 15 minutes | Warning |
 | Any access to Restricted-tier data outside business hours | 15 minutes | Warning |
