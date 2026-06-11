@@ -99,6 +99,10 @@ This package is consumed by:
 - **precepts-dev/engine** - Commercial compliance scanning engine (private)
 - **Your tools** - build anything on top of these standards
 
+### Consuming Standards via MCP (Model Context Protocol)
+
+If you want AI agents (like Claude Desktop, Copilot, Cursor etc.) to interactively read, search, and validate your own implementation against these standards, check out the MCP server implementation in the [platform repository](https://github.com/precepts-dev/platform).
+
 ## Contributing
 
 Standards proposals and revisions are welcome. Each standard follows the template in `schema/document-standard-template.md`.
