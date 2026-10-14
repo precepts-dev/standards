@@ -2,7 +2,7 @@
 
 Built for humans. Ready for agents.
 
-The canonical source of multi-discipline standards for the [Precepts](https://precepts.dev) platform. Standards are published as machine-readable Markdown with YAML frontmatter, consumable by both humans and AI agents.
+The canonical source of multi-discipline standards for the [Precepts](https://docs.precepts.dev) platform. Standards are published as machine-readable Markdown with YAML frontmatter, consumable by both humans and AI agents.
 
 ## Install
 
