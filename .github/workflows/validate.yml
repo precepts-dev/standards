@@ -2,11 +2,13 @@ name: Validate Standards
 
 on:
   pull_request:
-    paths:
-      - 'standards/**'
-      - 'schema/**'
-      - 'tools/**'
-      - .github/**
+    branches:
+      - main
+    # paths:
+    #   - 'standards/**'
+    #   - 'schema/**'
+    #   - 'tools/**'
+    #   - .github/**
 
 jobs:
   validate:
