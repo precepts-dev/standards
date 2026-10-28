@@ -1,3 +1,9 @@
+## [0.5.3](https://github.com/precepts-dev/standards/compare/v0.5.2...v0.5.3) (2026-10-28)
+
+### Bug Fixes
+
+* **readme:** link to Precepts documentation ([#27](https://github.com/precepts-dev/standards/issues/27)) ([a4aa578](https://github.com/precepts-dev/standards/commit/a4aa578794d972c3164320ed7f958120dced7255))
+
 ## [0.5.2](https://github.com/precepts-dev/standards/compare/v0.5.1...v0.5.2) (2026-09-08)
 
 ### Bug Fixes
